@@ -57,18 +57,22 @@ func main() {
 	userController := &controllers.UserController{UserService: userService}
 	authService := &services.AuthService{DB: db}
 	authController := &controllers.AuthController{AuthService: authService}
+	foodService := &services.FoodService{DB: db}
+	foodController := &controllers.FoodController{FoodService: foodService}
 
 	// groups
-	private := r.Group("/admin/")
+	admin := r.Group("/admin/")
 	auth_route := r.Group("/auth/")
+	api_route := r.Group("/api/")
 
 	// use middleware
-	private.Use(middlewares.JWTAuthMiddleware())
+	api_route.Use(middlewares.JWTAuthMiddleware())
 
 	// routes
 	auth_route.POST("/register", authController.Register)
 	auth_route.POST("/login", authController.Login)
-	private.GET("/api/v1/users", userController.GetAllUsers)
+	admin.GET("/api/v1/users", userController.GetAllUsers)
+	api_route.GET("/v1/load/foods", foodController.LoadFoods)
 
 	// run server
 	if err := r.Run(":" + port); err != nil {
