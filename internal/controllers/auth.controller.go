@@ -14,14 +14,15 @@ type AuthController struct {
 
 func (c *AuthController) Register(ctx *gin.Context) {
 	var input struct {
-		Email    string `json:"email" binding:"required,email"`
-		Password string `json:"password" binding:"required,min=6"`
+		Email     string `json:"email" binding:"required,email"`
+		Password  string `json:"password" binding:"required,min=6"`
+		SecretKey string `json:"secret_key"`
 	}
 	if err := ctx.ShouldBindJSON(&input); err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	user, err := c.AuthService.Register(input.Email, input.Password)
+	user, err := c.AuthService.Register(input.Email, input.Password, input.SecretKey)
 	if err != nil {
 		log.Println("Error registering user:", err)
 		ctx.JSON(http.StatusConflict, gin.H{"error": err.Error()})

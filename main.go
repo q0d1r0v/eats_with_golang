@@ -53,12 +53,16 @@ func main() {
 	r := gin.Default()
 
 	// use services and controllers
-	userService := &services.UserService{DB: db}
-	userController := &controllers.UserController{UserService: userService}
+	// userService := &services.UserService{DB: db}
+	// userController := &controllers.UserController{UserService: userService}
 	authService := &services.AuthService{DB: db}
 	authController := &controllers.AuthController{AuthService: authService}
 	foodService := &services.FoodService{DB: db}
 	foodController := &controllers.FoodController{FoodService: foodService}
+	branchService := &services.BranchService{DB: db}
+	branchController := &controllers.BranchController{BranchService: branchService}
+	categoryService := &services.CategoryService{DB: db}
+	categoryController := &controllers.CategoryController{CategoryService: categoryService}
 
 	// groups
 	admin := r.Group("/admin/")
@@ -66,13 +70,19 @@ func main() {
 	api_route := r.Group("/api/")
 
 	// use middleware
+	admin.Use(middlewares.JWTAdminMiddleware(db))
 	api_route.Use(middlewares.JWTAuthMiddleware())
 
 	// routes
 	auth_route.POST("/register", authController.Register)
 	auth_route.POST("/login", authController.Login)
-	admin.GET("/api/v1/users", userController.GetAllUsers)
 	api_route.GET("/v1/load/foods", foodController.LoadFoods)
+	admin.POST("/api/v1/create/branch", branchController.CreateBranch)
+	admin.GET("/api/v1/load/branches", branchController.LoadBranches)
+	admin.PUT("/api/v1/update/branch", branchController.UpdateBranch)
+	admin.DELETE("/api/v1/delete/branch", branchController.DeleteBranch)
+	admin.GET("/api/v1/load/categories", categoryController.LoadCategories)
+	admin.POST("/api/v1/create/category", categoryController.CreateCategory)
 
 	// run server
 	if err := r.Run(":" + port); err != nil {

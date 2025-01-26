@@ -19,8 +19,7 @@ type AuthService struct {
 var jwtSecret = []byte(os.Getenv("JWT_SECRET_KEY"))
 
 // register user
-func (s *AuthService) Register(email string, password string) (*models.User, error) {
-	// check to unique email
+func (s *AuthService) Register(email string, password string, secretKey string) (*models.User, error) {
 	var existingUser models.User
 	if err := s.DB.Where("email = ?", email).First(&existingUser).Error; err == nil {
 		return nil, fmt.Errorf("email %s already taken", email)
@@ -29,21 +28,47 @@ func (s *AuthService) Register(email string, password string) (*models.User, err
 	if err != nil {
 		return nil, err
 	}
-
+	isAdmin := false
+	adminSecretKey := os.Getenv("ADMIN_SECRET_KEY")
+	if secretKey == adminSecretKey {
+		isAdmin = true
+	}
+	var role models.Role
+	if isAdmin {
+		if err := s.DB.Where("name = ?", "admin").First(&role).Error; err != nil {
+			role = models.Role{
+				ID:   uuid.New(),
+				Name: "admin",
+			}
+			if result := s.DB.Create(&role); result.Error != nil {
+				return nil, fmt.Errorf("failed to create admin role: %v", result.Error)
+			}
+		}
+	} else {
+		if err := s.DB.Where("name = ?", "user").First(&role).Error; err != nil {
+			role = models.Role{
+				ID:   uuid.New(),
+				Name: "user",
+			}
+			if result := s.DB.Create(&role); result.Error != nil {
+				return nil, fmt.Errorf("failed to create user role: %v", result.Error)
+			}
+		}
+	}
 	user := &models.User{
 		ID:       uuid.New(),
 		Email:    email,
 		Password: string(hashedPassword),
+		RoleID:   &role.ID,
 	}
-	result := s.DB.Create(&user)
-	if result.Error != nil {
-		return nil, result.Error
+	if result := s.DB.Create(&user); result.Error != nil {
+		return nil, fmt.Errorf("failed to create user: %v", result.Error)
 	}
+
 	return user, nil
 }
 
-// login
-func (s *AuthService) Login(email, password string) (string, error) {
+func (s *AuthService) Login(email string, password string) (string, error) {
 	var user models.User
 	result := s.DB.Where("email = ?", email).First(&user)
 	if result.Error != nil {
@@ -53,7 +78,7 @@ func (s *AuthService) Login(email, password string) (string, error) {
 	if err != nil {
 		return "", fmt.Errorf("incorrect password")
 	}
-	token, err := s.generateJWT(user.ID, user.Email)
+	token, err := s.generateJWT(user.ID, user.Email, user.RoleID)
 	if err != nil {
 		return "", err
 	}
@@ -61,11 +86,11 @@ func (s *AuthService) Login(email, password string) (string, error) {
 	return token, nil
 }
 
-// JWT yaratish
-func (s *AuthService) generateJWT(userID uuid.UUID, email string) (string, error) {
+func (s *AuthService) generateJWT(userID uuid.UUID, email string, roleID *uuid.UUID) (string, error) {
 	claims := jwt.MapClaims{
 		"user_id": userID.String(),
 		"email":   email,
+		"role_id": roleID,
 		"exp":     time.Now().Add(time.Hour * 24).Unix(),
 		"iat":     time.Now().Unix(),
 	}

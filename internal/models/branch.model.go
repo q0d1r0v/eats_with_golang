@@ -6,9 +6,9 @@ import (
 )
 
 type Branch struct {
-	ID        uuid.UUID `gorm:"type:uuid;not null;primaryKey"`
-	Name      string    `gorm:"size:255;not null"`
-	CourierID uuid.UUID `gorm:"type:uuid"`
-	Courier   Courier   `gorm:"foreignKey:CourierID"`
+	ID        uuid.UUID  `gorm:"type:uuid;not null;primaryKey"`
+	Name      string     `gorm:"size:255;not null"`
+	CourierID *uuid.UUID `gorm:"type:uuid"`
+	Courier   *Courier   `gorm:"foreignKey:CourierID"`
 	gorm.Model
 }
