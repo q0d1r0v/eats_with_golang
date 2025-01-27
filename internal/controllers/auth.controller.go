@@ -35,7 +35,6 @@ func (c *AuthController) Register(ctx *gin.Context) {
 	})
 }
 func (ac *AuthController) Login(c *gin.Context) {
-	// Login uchun kerakli malumotlarni olish
 	var loginData struct {
 		Email    string `json:"email" binding:"required,email"`
 		Password string `json:"password" binding:"required"`
@@ -46,15 +45,34 @@ func (ac *AuthController) Login(c *gin.Context) {
 		return
 	}
 
-	// Foydalanuvchi login qilish
 	token, err := ac.AuthService.Login(loginData.Email, loginData.Password)
 	if err != nil {
-		// Xato bo'lsa
 		c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
 		return
 	}
 
-	// Tokenni muvaffaqiyatli yaratgan taqdirda
+	c.JSON(http.StatusOK, gin.H{
+		"message": "Login successful",
+		"token":   token,
+	})
+}
+func (ac *AuthController) CourierLogin(c *gin.Context) {
+	var loginData struct {
+		Username string `json:"username" binding:"required"`
+		Password string `json:"password" binding:"required"`
+	}
+
+	if err := c.ShouldBindJSON(&loginData); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid input data"})
+		return
+	}
+
+	token, err := ac.AuthService.CourierLogin(loginData.Username, loginData.Password)
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
+		return
+	}
+
 	c.JSON(http.StatusOK, gin.H{
 		"message": "Login successful",
 		"token":   token,

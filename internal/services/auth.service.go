@@ -85,7 +85,6 @@ func (s *AuthService) Login(email string, password string) (string, error) {
 
 	return token, nil
 }
-
 func (s *AuthService) generateJWT(userID uuid.UUID, email string, roleID *uuid.UUID) (string, error) {
 	claims := jwt.MapClaims{
 		"user_id": userID.String(),
@@ -93,6 +92,41 @@ func (s *AuthService) generateJWT(userID uuid.UUID, email string, roleID *uuid.U
 		"role_id": roleID,
 		"exp":     time.Now().Add(time.Hour * 24).Unix(),
 		"iat":     time.Now().Unix(),
+	}
+
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+
+	signedToken, err := token.SignedString(jwtSecret)
+	if err != nil {
+		return "", fmt.Errorf("could not sign the token: %v", err)
+	}
+
+	return signedToken, nil
+}
+func (s *AuthService) CourierLogin(username string, password string) (string, error) {
+	var courier models.Courier
+	result := s.DB.Where("username = ?", username).First(&courier)
+	if result.Error != nil {
+		return "", fmt.Errorf("courier not found")
+	}
+	err := bcrypt.CompareHashAndPassword([]byte(courier.Password), []byte(password))
+	if err != nil {
+		return "", fmt.Errorf("incorrect password")
+	}
+	token, err := s.generateCourierJWT(courier.ID, courier.Username, courier.Fullname)
+	if err != nil {
+		return "", err
+	}
+
+	return token, nil
+}
+func (s *AuthService) generateCourierJWT(courierID uuid.UUID, username string, full_name string) (string, error) {
+	claims := jwt.MapClaims{
+		"courier_id": courierID,
+		"username":   username,
+		"full_name":  full_name,
+		"exp":        time.Now().Add(time.Hour * 24).Unix(),
+		"iat":        time.Now().Unix(),
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)

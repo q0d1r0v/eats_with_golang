@@ -31,3 +31,32 @@ func (s *CategoryService) CreateCategory(branchID uuid.UUID, name string) (*mode
 
 	return category, nil
 }
+
+func (s *CategoryService) UpdateCategory(categoryID, branchID uuid.UUID, name string) (*models.Category, error) {
+	var category models.Category
+	if err := s.DB.First(&category, "id = ?", categoryID).Error; err != nil {
+		return nil, err
+	}
+
+	category.Name = name
+	category.BranchID = branchID
+
+	if err := s.DB.Save(&category).Error; err != nil {
+		return nil, err
+	}
+
+	return &category, nil
+}
+
+func (s *CategoryService) DeleteCategory(categoryID uuid.UUID) error {
+	var category models.Category
+	if err := s.DB.First(&category, "id = ?", categoryID).Error; err != nil {
+		return err
+	}
+
+	if err := s.DB.Delete(&category).Error; err != nil {
+		return err
+	}
+
+	return nil
+}
