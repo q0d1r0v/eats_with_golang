@@ -67,10 +67,11 @@ This document lists all the API routes for the **Eats Backend API**.
 
 ## Courier Routes
 
-| Method | Endpoint                          | Description              |
-| ------ | --------------------------------- | ------------------------ |
-| GET    | `/courier/api/v1/load/all/orders` | Get all assigned orders. |
-| PUT    | `/courier/api/v1/update/order`    | Update order status.     |
+| Method | Endpoint                             | Description              |
+| ------ | ------------------------------------ | ------------------------ |
+| GET    | `/courier/api/v1/load/all/orders`    | Get all assigned orders. |
+| GET    | `/courier/api/v1/load/active/orders` | Get active orders.       |
+| PUT    | `/courier/api/v1/update/order`       | Update order status.     |
 
 ---
 

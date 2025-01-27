@@ -18,6 +18,11 @@ func (s *OrderService) LoadAllOrders() ([]models.Order, error) {
 	result := s.DB.Find(&orders)
 	return orders, result.Error
 }
+func (s *OrderService) LoadActiveOrders() ([]models.Order, error) {
+	var orders []models.Order
+	result := s.DB.Where("status = ?", "pending").Find(&orders)
+	return orders, result.Error
+}
 
 // create order
 func (s *OrderService) CreateOrder(input struct {

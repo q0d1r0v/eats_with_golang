@@ -92,6 +92,7 @@ func main() {
 
 	// courier roures
 	courier.GET("/api/v1/load/all/orders", orderController.LoadAllOrders)
+	courier.GET("/api/v1/load/active/orders", orderController.LoadActiveOrders)
 	courier.PUT("/api/v1/update/order", orderController.UpdateOrder)
 
 	// admin branch routes

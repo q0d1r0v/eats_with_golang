@@ -31,6 +31,14 @@ func (oc *OrderController) LoadAllOrders(c *gin.Context) {
 	}
 	c.JSON(http.StatusOK, orders)
 }
+func (oc *OrderController) LoadActiveOrders(c *gin.Context) {
+	orders, err := oc.OrderService.LoadActiveOrders()
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch orders"})
+		return
+	}
+	c.JSON(http.StatusOK, orders)
+}
 
 func (oc *OrderController) CreateOrder(c *gin.Context) {
 	var orderInput CreateOrderInput
